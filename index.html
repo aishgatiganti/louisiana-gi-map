@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Louisiana GI Care Guide</title>
+    <style>
+        /* CSS: Clean, High-Contrast, and Accessible */
+        :root { --blue: #2980b9; --green: #27ae60; --red: #c0392b; --light: #f4f7f6; }
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: auto; padding: 15px; background-color: var(--light); }
+        h1 { color: #2c3e50; text-align: center; font-size: 28px; margin-bottom: 5px; }
+        .subtitle { text-align: center; color: #666; margin-bottom: 25px; font-weight: bold; }
+        .card { background: white; padding: 20px; border-radius: 12px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); margin-bottom: 20px; border-top: 5px solid var(--blue); }
+        .btn { display: block; width: 100%; padding: 18px; margin: 12px 0; border: none; border-radius: 8px; font-size: 18px; font-weight: bold; cursor: pointer; text-align: center; text-decoration: none; box-sizing: border-box; }
+        .btn-blue { background-color: var(--blue); color: white; }
+        .btn-green { background-color: var(--green); color: white; }
+        .risk-alert { background: #fee; border: 1px solid var(--red); padding: 15px; border-radius: 8px; margin-top: 15px; display: none; }
+        .quiz-step { display: none; }
+        .active { display: block; }
+        .clinic-list { margin-top: 15px; border-top: 1px solid #ddd; padding-top: 10px; }
+        .clinic-item { margin-bottom: 12px; font-size: 16px; }
+        .clinic-link { color: var(--blue); font-weight: bold; text-decoration: underline; }
+    </style>
+</head>
+<body>
+
+    <h1>Louisiana GI Health Guide</h1>
+    <p class="subtitle">Free resources for our community.</p>
+
+    <div class="card">
+        <h2>1. Check Your Parish</h2>
+        <p>Some areas in Louisiana have higher rates of colon cancer. Choose your parish to find a doctor near you:</p>
+        
+        <select id="parishSelect" onchange="updateParishInfo()" style="width:100%; padding:15px; font-size:16px; border-radius:8px;">
+            <option value="">-- Choose your Parish --</option>
+            <option value="stjames">St. James Parish</option>
+            <option value="stjohn">St. John the Baptist</option>
+            <option value="stcharles">St. Charles Parish</option>
+            <option value="ascension">Ascension Parish</option>
+            <option value="orleans">Orleans Parish</option>
+            <option value="other">Other Louisiana Parish</option>
+        </select>
+
+        <div id="riskInfo" class="risk-alert">
+            <p id="riskText"></p>
+            <div class="clinic-list" id="clinicList"></div>
+        </div>
+    </div>
+
+    <div class="card" id="quizCard">
+        <h2>2. Should you see a doctor?</h2>
+        
+        <div id="q1" class="quiz-step active">
+            <p><strong>Are you 45 years old or older?</strong></p>
+            <button class="btn btn-blue" onclick="nextQuestion(1, 'yes')">Yes</button>
+            <button class="btn btn-blue" onclick="nextQuestion(1, 'no')">No</button>
+        </div>
+
+        <div id="q2" class="quiz-step">
+            <p><strong>Have you seen blood in your poop?</strong></p>
+            <button class="btn btn-blue" onclick="nextQuestion(2, 'yes')">Yes</button>
+            <button class="btn btn-blue" onclick="nextQuestion(2, 'no')">No</button>
+        </div>
+
+        <div id="q3" class="quiz-step">
+            <p><strong>Did a parent or sibling ever have colon cancer?</strong></p>
+            <button class="btn btn-blue" onclick="nextQuestion(3, 'yes')">Yes</button>
+            <button class="btn btn-blue" onclick="nextQuestion(3, 'no')">No</button>
+        </div>
+
+        <div id="quizResult" class="quiz-step">
+            <h3>Our Advice:</h3>
+            <p id="adviceText" style="font-size:18px; font-weight:bold;"></p>
+            <button class="btn btn-green" onclick="location.reload()">Start Over</button>
+        </div>
+    </div>
+
+    <script>
+        // Database of Clinics & Risk Info
+        const data = {
+            stjames: {
+                text: "St. James has high rates of colon cancer. Doctors recommend regular check-ups here.",
+                clinics: [{ name: "St. James Parish Hospital Clinic", phone: "225-869-5512" }]
+            },
+            stjohn: {
+                text: "St. John the Baptist is in a high-risk area. It is important to get screened.",
+                clinics: [{ name: "Access Health Louisiana (Reserve)", phone: "985-652-3544" }]
+            },
+            stcharles: {
+                text: "St. Charles residents should talk to a doctor about screening if they are over 45.",
+                clinics: [{ name: "St. Charles Community Health Center (Luling)", phone: "985-785-5800" }]
+            },
+            ascension: {
+                text: "Ascension Parish has many free resources for liver and gut health.",
+                clinics: [{ name: "CareSouth (Donaldsonville)", phone: "225-650-2000" }]
+            },
+            orleans: {
+                text: "New Orleans has many clinics that help people without insurance.",
+                clinics: [{ name: "St. Thomas Community Health Center", phone: "504-529-5558" }, { name: "CrescentCare", phone: "504-821-2601" }]
+            },
+            other: {
+                text: "No matter where you live, gut health is important.",
+                clinics: [{ name: "Find any Louisiana Clinic (LDH)", phone: "1-855-459-6566" }]
+            }
+        };
+
+        function updateParishInfo() {
+            const select = document.getElementById('parishSelect');
+            const infoDiv = document.getElementById('riskInfo');
+            const text = document.getElementById('riskText');
+            const list = document.getElementById('clinicList');
+            const parish = select.value;
+
+            if (!parish) { infoDiv.style.display = 'none'; return; }
+
+            infoDiv.style.display = 'block';
+            text.innerHTML = "<strong>Parish Note:</strong> " + data[parish].text;
+            list.innerHTML = "<strong>Clinics for you:</strong><br>";
+            data[parish].clinics.forEach(c => {
+                list.innerHTML += `<div class='clinic-item'>${c.name}: <a href='tel:${c.phone}' class='clinic-link'>${c.phone}</a></div>`;
+            });
+        }
+
+        let answers = { over45: false, blood: false, family: false };
+
+        function nextQuestion(num, ans) {
+            if (num === 1) answers.over45 = (ans === 'yes');
+            if (num === 2) answers.blood = (ans === 'yes');
+            if (num === 3) answers.family = (ans === 'yes');
+
+            document.getElementById('q' + num).classList.remove('active');
+
+            if (num < 3) {
+                document.getElementById('q' + (num + 1)).classList.add('active');
+            } else {
+                showFinalResult();
+            }
+        }
+
+        function showFinalResult() {
+            const resultDiv = document.getElementById('quizResult');
+            const advice = document.getElementById('adviceText');
+            resultDiv.classList.add('active');
+
+            if (answers.blood) {
+                advice.innerText = "Urgent: Please call a doctor this week to talk about the blood you saw.";
+            } else if (answers.over45 || answers.family) {
+                advice.innerText = "Recommended: It is time for a colonoscopy. Please call a clinic to set it up.";
+            } else {
+                advice.innerText = "Good News: You are at low risk right now. Keep eating healthy and do your yearly check-ups!";
+            }
+        }
+    </script>
+</body>
+</html>
